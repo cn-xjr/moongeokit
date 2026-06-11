@@ -45,3 +45,25 @@ test "point on segment handles collinear bounds" {
     @moongeokit.point_on_segment(@moongeokit.Point::new(5.0, 0.0), segment),
   )
 }
+
+///|
+test "bounds from points computes extent" {
+  let bounds = @moongeokit.Bounds::from_points([
+    @moongeokit.Point::new(2.0, 4.0),
+    @moongeokit.Point::new(-1.0, 5.0),
+    @moongeokit.Point::new(3.0, -2.0),
+  ])
+  assert_eq(bounds.min_x, -1.0)
+  assert_eq(bounds.max_y, 5.0)
+  assert_eq(bounds.width(), 4.0)
+  assert_eq(bounds.height(), 7.0)
+}
+
+///|
+test "bounds containment and intersection" {
+  let bounds = @moongeokit.Bounds::new(0.0, 0.0, 4.0, 4.0)
+  assert_true(bounds.contains(@moongeokit.Point::new(2.0, 2.0)))
+  assert_false(bounds.contains(@moongeokit.Point::new(5.0, 2.0)))
+  assert_true(bounds.intersects(@moongeokit.Bounds::new(3.0, 3.0, 5.0, 5.0)))
+  assert_false(bounds.intersects(@moongeokit.Bounds::new(5.0, 5.0, 6.0, 6.0)))
+}

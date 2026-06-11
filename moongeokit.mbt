@@ -11,6 +11,14 @@ pub(all) struct Segment {
 } derive(Debug)
 
 ///|
+pub(all) struct Bounds {
+  min_x : Double
+  min_y : Double
+  max_x : Double
+  max_y : Double
+} derive(Debug)
+
+///|
 pub fn Point::new(x : Double, y : Double) -> Point {
   { x, y }
 }
@@ -18,6 +26,39 @@ pub fn Point::new(x : Double, y : Double) -> Point {
 ///|
 pub fn Segment::new(start : Point, end : Point) -> Segment {
   { start, end }
+}
+
+///|
+pub fn Bounds::new(
+  min_x : Double,
+  min_y : Double,
+  max_x : Double,
+  max_y : Double,
+) -> Bounds {
+  {
+    min_x: min_double(min_x, max_x),
+    min_y: min_double(min_y, max_y),
+    max_x: max_double(min_x, max_x),
+    max_y: max_double(min_y, max_y),
+  }
+}
+
+///|
+pub fn Bounds::from_points(points : Array[Point]) -> Bounds {
+  if points.length() == 0 {
+    return Bounds::new(0.0, 0.0, 0.0, 0.0)
+  }
+  let mut min_x = points[0].x
+  let mut max_x = points[0].x
+  let mut min_y = points[0].y
+  let mut max_y = points[0].y
+  for i = 1; i < points.length(); i = i + 1 {
+    min_x = min_double(min_x, points[i].x)
+    max_x = max_double(max_x, points[i].x)
+    min_y = min_double(min_y, points[i].y)
+    max_y = max_double(max_y, points[i].y)
+  }
+  Bounds::new(min_x, min_y, max_x, max_y)
 }
 
 ///|
@@ -107,4 +148,30 @@ pub fn segments_intersect(a : Segment, b : Segment) -> Bool {
   }
   ((o1 > 0.0 && o2 < 0.0) || (o1 < 0.0 && o2 > 0.0)) &&
   ((o3 > 0.0 && o4 < 0.0) || (o3 < 0.0 && o4 > 0.0))
+}
+
+///|
+pub fn Bounds::width(self : Bounds) -> Double {
+  self.max_x - self.min_x
+}
+
+///|
+pub fn Bounds::height(self : Bounds) -> Double {
+  self.max_y - self.min_y
+}
+
+///|
+pub fn Bounds::contains(self : Bounds, point : Point) -> Bool {
+  point.x >= self.min_x &&
+  point.x <= self.max_x &&
+  point.y >= self.min_y &&
+  point.y <= self.max_y
+}
+
+///|
+pub fn Bounds::intersects(self : Bounds, other : Bounds) -> Bool {
+  self.min_x <= other.max_x &&
+  self.max_x >= other.min_x &&
+  self.min_y <= other.max_y &&
+  self.max_y >= other.min_y
 }
