@@ -171,6 +171,34 @@ pub fn segments_intersect(a : Segment, b : Segment) -> Bool {
 }
 
 ///|
+fn clamp_double(value : Double, min : Double, max : Double) -> Double {
+  if value < min {
+    min
+  } else if value > max {
+    max
+  } else {
+    value
+  }
+}
+
+///|
+pub fn closest_point_on_segment(point : Point, segment : Segment) -> Point {
+  let ab = segment.end.sub(segment.start)
+  let ap = point.sub(segment.start)
+  let denom = ab.dot(ab)
+  if denom == 0.0 {
+    return segment.start
+  }
+  let t = clamp_double(ap.dot(ab) / denom, 0.0, 1.0)
+  segment.start.add(ab.scale(t))
+}
+
+///|
+pub fn distance_to_segment(point : Point, segment : Segment) -> Double {
+  point.distance_to(closest_point_on_segment(point, segment))
+}
+
+///|
 pub fn Bounds::width(self : Bounds) -> Double {
   self.max_x - self.min_x
 }

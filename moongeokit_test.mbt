@@ -144,3 +144,34 @@ test "polyline simplify keeps endpoints and distant points" {
   assert_eq(simplified.points[1].x, 2.0)
   assert_eq(simplified.points[2].x, 4.0)
 }
+
+///|
+test "closest point on segment clamps projection" {
+  let segment = @moongeokit.Segment::new(
+    @moongeokit.Point::new(0.0, 0.0),
+    @moongeokit.Point::new(4.0, 0.0),
+  )
+  let projected = @moongeokit.closest_point_on_segment(
+    @moongeokit.Point::new(2.0, 3.0),
+    segment,
+  )
+  let clamped = @moongeokit.closest_point_on_segment(
+    @moongeokit.Point::new(5.0, 3.0),
+    segment,
+  )
+  assert_eq(projected.x, 2.0)
+  assert_eq(projected.y, 0.0)
+  assert_eq(clamped.x, 4.0)
+}
+
+///|
+test "distance to segment uses closest point" {
+  let segment = @moongeokit.Segment::new(
+    @moongeokit.Point::new(0.0, 0.0),
+    @moongeokit.Point::new(4.0, 0.0),
+  )
+  assert_eq(
+    @moongeokit.distance_to_segment(@moongeokit.Point::new(2.0, 3.0), segment),
+    3.0,
+  )
+}
