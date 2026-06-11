@@ -67,3 +67,29 @@ test "bounds containment and intersection" {
   assert_true(bounds.intersects(@moongeokit.Bounds::new(3.0, 3.0, 5.0, 5.0)))
   assert_false(bounds.intersects(@moongeokit.Bounds::new(5.0, 5.0, 6.0, 6.0)))
 }
+
+///|
+test "polygon computes area and perimeter" {
+  let polygon = @moongeokit.Polygon::new([
+    @moongeokit.Point::new(0.0, 0.0),
+    @moongeokit.Point::new(4.0, 0.0),
+    @moongeokit.Point::new(4.0, 3.0),
+    @moongeokit.Point::new(0.0, 3.0),
+  ])
+  assert_eq(polygon.vertex_count(), 4)
+  assert_eq(polygon.area(), 12.0)
+  assert_eq(polygon.perimeter(), 14.0)
+}
+
+///|
+test "polygon average centroid uses all vertices" {
+  let polygon = @moongeokit.Polygon::new([
+    @moongeokit.Point::new(0.0, 0.0),
+    @moongeokit.Point::new(2.0, 0.0),
+    @moongeokit.Point::new(2.0, 2.0),
+    @moongeokit.Point::new(0.0, 2.0),
+  ])
+  let center = polygon.centroid_average()
+  assert_eq(center.x, 1.0)
+  assert_eq(center.y, 1.0)
+}

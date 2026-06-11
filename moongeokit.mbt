@@ -19,6 +19,11 @@ pub(all) struct Bounds {
 } derive(Debug)
 
 ///|
+pub(all) struct Polygon {
+  points : Array[Point]
+} derive(Debug)
+
+///|
 pub fn Point::new(x : Double, y : Double) -> Point {
   { x, y }
 }
@@ -59,6 +64,11 @@ pub fn Bounds::from_points(points : Array[Point]) -> Bounds {
     max_y = max_double(max_y, points[i].y)
   }
   Bounds::new(min_x, min_y, max_x, max_y)
+}
+
+///|
+pub fn Polygon::new(points : Array[Point]) -> Polygon {
+  { points, }
 }
 
 ///|
@@ -174,4 +184,64 @@ pub fn Bounds::intersects(self : Bounds, other : Bounds) -> Bool {
   self.max_x >= other.min_x &&
   self.min_y <= other.max_y &&
   self.max_y >= other.min_y
+}
+
+///|
+pub fn Polygon::vertex_count(self : Polygon) -> Int {
+  self.points.length()
+}
+
+///|
+pub fn Polygon::signed_area(self : Polygon) -> Double {
+  if self.points.length() < 3 {
+    return 0.0
+  }
+  let mut total = 0.0
+  for i = 0; i < self.points.length(); i = i + 1 {
+    let next = (i + 1) % self.points.length()
+    total = total +
+      self.points[i].x * self.points[next].y -
+      self.points[next].x * self.points[i].y
+  }
+  total / 2.0
+}
+
+///|
+pub fn Polygon::area(self : Polygon) -> Double {
+  let area = self.signed_area()
+  if area < 0.0 {
+    -area
+  } else {
+    area
+  }
+}
+
+///|
+pub fn Polygon::perimeter(self : Polygon) -> Double {
+  if self.points.length() < 2 {
+    return 0.0
+  }
+  let mut total = 0.0
+  for i = 0; i < self.points.length(); i = i + 1 {
+    let next = (i + 1) % self.points.length()
+    total = total + self.points[i].distance_to(self.points[next])
+  }
+  total
+}
+
+///|
+pub fn Polygon::centroid_average(self : Polygon) -> Point {
+  if self.points.length() == 0 {
+    return Point::new(0.0, 0.0)
+  }
+  let mut x = 0.0
+  let mut y = 0.0
+  for i = 0; i < self.points.length(); i = i + 1 {
+    x = x + self.points[i].x
+    y = y + self.points[i].y
+  }
+  Point::new(
+    x / self.points.length().to_double(),
+    y / self.points.length().to_double(),
+  )
 }
