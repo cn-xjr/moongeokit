@@ -390,3 +390,27 @@ pub fn Polyline::simplify_by_distance(
   }
   Polyline::new(simplified)
 }
+
+///|
+pub fn Point::to_json(self : Point) -> String {
+  "{\"x\":\{self.x},\"y\":\{self.y}}"
+}
+
+///|
+pub fn Bounds::to_json(self : Bounds) -> String {
+  "{\"min_x\":\{self.min_x},\"min_y\":\{self.min_y},\"max_x\":\{self.max_x},\"max_y\":\{self.max_y}}"
+}
+
+///|
+pub fn Polygon::to_json(self : Polygon) -> String {
+  let buf = StringBuilder()
+  buf.write_string("{\"points\":[")
+  for i = 0; i < self.points.length(); i = i + 1 {
+    if i > 0 {
+      buf.write_char(',')
+    }
+    buf.write_string(self.points[i].to_json())
+  }
+  buf.write_string("]}")
+  buf.to_string()
+}

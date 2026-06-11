@@ -175,3 +175,16 @@ test "distance to segment uses closest point" {
     3.0,
   )
 }
+
+///|
+test "geometry objects export stable json" {
+  let point = @moongeokit.Point::new(1.0, 2.0)
+  let bounds = @moongeokit.Bounds::new(0.0, 0.0, 3.0, 4.0)
+  let polygon = @moongeokit.Polygon::new([
+    point,
+    @moongeokit.Point::new(2.0, 2.0),
+  ])
+  assert_eq(point.to_json(), "{\"x\":1,\"y\":2}")
+  assert_true(bounds.to_json().contains("\"max_y\":4"))
+  assert_true(polygon.to_json().contains("\"points\""))
+}
