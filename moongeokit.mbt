@@ -271,3 +271,51 @@ pub fn Polygon::contains_point(self : Polygon, point : Point) -> Bool {
   }
   inside
 }
+
+///|
+fn leftmost_index(points : Array[Point]) -> Int {
+  let mut index = 0
+  for i = 1; i < points.length(); i = i + 1 {
+    if points[i].x < points[index].x ||
+      (points[i].x == points[index].x && points[i].y < points[index].y) {
+      index = i
+    }
+  }
+  index
+}
+
+///|
+pub fn convex_hull(points : Array[Point]) -> Polygon {
+  let hull : Array[Point] = []
+  if points.length() < 3 {
+    for i = 0; i < points.length(); i = i + 1 {
+      hull.push(points[i])
+    }
+    return Polygon::new(hull)
+  }
+  let start = leftmost_index(points)
+  let mut current = start
+  let mut closed = false
+  let mut steps = 0
+  while !closed && steps <= points.length() {
+    hull.push(points[current])
+    let mut next = (current + 1) % points.length()
+    for candidate = 0; candidate < points.length(); candidate = candidate + 1 {
+      let turn = orientation(points[current], points[next], points[candidate])
+      if turn < 0.0 ||
+        (
+          turn == 0.0 &&
+          points[current].distance_to(points[candidate]) >
+          points[current].distance_to(points[next])
+        ) {
+        next = candidate
+      }
+    }
+    current = next
+    if current == start {
+      closed = true
+    }
+    steps = steps + 1
+  }
+  Polygon::new(hull)
+}
