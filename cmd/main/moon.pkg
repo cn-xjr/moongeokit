@@ -1,0 +1,7 @@
+// import {
+//   "cn-xjr/moongeokit" @geo,
+// }
+
+options(
+  "is-main": true,
+)
