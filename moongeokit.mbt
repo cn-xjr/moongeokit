@@ -24,6 +24,11 @@ pub(all) struct Polygon {
 } derive(Debug)
 
 ///|
+pub(all) struct Polyline {
+  points : Array[Point]
+} derive(Debug)
+
+///|
 pub fn Point::new(x : Double, y : Double) -> Point {
   { x, y }
 }
@@ -68,6 +73,11 @@ pub fn Bounds::from_points(points : Array[Point]) -> Bounds {
 
 ///|
 pub fn Polygon::new(points : Array[Point]) -> Polygon {
+  { points, }
+}
+
+///|
+pub fn Polyline::new(points : Array[Point]) -> Polyline {
   { points, }
 }
 
@@ -318,4 +328,37 @@ pub fn convex_hull(points : Array[Point]) -> Polygon {
     steps = steps + 1
   }
   Polygon::new(hull)
+}
+
+///|
+pub fn Polyline::length(self : Polyline) -> Double {
+  if self.points.length() < 2 {
+    return 0.0
+  }
+  let mut total = 0.0
+  for i = 1; i < self.points.length(); i = i + 1 {
+    total = total + self.points[i - 1].distance_to(self.points[i])
+  }
+  total
+}
+
+///|
+pub fn Polyline::simplify_by_distance(
+  self : Polyline,
+  min_distance : Double,
+) -> Polyline {
+  let simplified : Array[Point] = []
+  if self.points.length() == 0 {
+    return Polyline::new(simplified)
+  }
+  simplified.push(self.points[0])
+  let mut last = self.points[0]
+  for i = 1; i < self.points.length(); i = i + 1 {
+    if last.distance_to(self.points[i]) >= min_distance ||
+      i == self.points.length() - 1 {
+      simplified.push(self.points[i])
+      last = self.points[i]
+    }
+  }
+  Polyline::new(simplified)
 }

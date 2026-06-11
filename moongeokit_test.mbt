@@ -119,3 +119,28 @@ test "convex hull removes interior point" {
   assert_eq(hull.vertex_count(), 4)
   assert_eq(hull.area(), 16.0)
 }
+
+///|
+test "polyline length sums consecutive distances" {
+  let line = @moongeokit.Polyline::new([
+    @moongeokit.Point::new(0.0, 0.0),
+    @moongeokit.Point::new(3.0, 4.0),
+    @moongeokit.Point::new(6.0, 8.0),
+  ])
+  assert_eq(line.length(), 10.0)
+}
+
+///|
+test "polyline simplify keeps endpoints and distant points" {
+  let line = @moongeokit.Polyline::new([
+    @moongeokit.Point::new(0.0, 0.0),
+    @moongeokit.Point::new(0.2, 0.0),
+    @moongeokit.Point::new(2.0, 0.0),
+    @moongeokit.Point::new(2.1, 0.0),
+    @moongeokit.Point::new(4.0, 0.0),
+  ])
+  let simplified = line.simplify_by_distance(1.0)
+  assert_eq(simplified.points.length(), 3)
+  assert_eq(simplified.points[1].x, 2.0)
+  assert_eq(simplified.points[2].x, 4.0)
+}
