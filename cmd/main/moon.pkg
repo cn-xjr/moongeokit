@@ -1,6 +1,6 @@
-// import {
-//   "cn-xjr/moongeokit" @geo,
-// }
+import {
+  "cn-xjr/moongeokit" @geo,
+}
 
 options(
   "is-main": true,
