@@ -93,3 +93,16 @@ test "polygon average centroid uses all vertices" {
   assert_eq(center.x, 1.0)
   assert_eq(center.y, 1.0)
 }
+
+///|
+test "polygon contains point uses ray casting" {
+  let polygon = @moongeokit.Polygon::new([
+    @moongeokit.Point::new(0.0, 0.0),
+    @moongeokit.Point::new(4.0, 0.0),
+    @moongeokit.Point::new(4.0, 4.0),
+    @moongeokit.Point::new(0.0, 4.0),
+  ])
+  assert_true(polygon.contains_point(@moongeokit.Point::new(2.0, 2.0)))
+  assert_true(polygon.contains_point(@moongeokit.Point::new(0.0, 2.0)))
+  assert_false(polygon.contains_point(@moongeokit.Point::new(5.0, 2.0)))
+}

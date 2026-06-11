@@ -245,3 +245,29 @@ pub fn Polygon::centroid_average(self : Polygon) -> Point {
     y / self.points.length().to_double(),
   )
 }
+
+///|
+pub fn Polygon::contains_point(self : Polygon, point : Point) -> Bool {
+  if self.points.length() < 3 {
+    return false
+  }
+  let mut inside = false
+  let mut j = self.points.length() - 1
+  for i = 0; i < self.points.length(); i = i + 1 {
+    let pi = self.points[i]
+    let pj = self.points[j]
+    let edge = Segment::new(pj, pi)
+    if point_on_segment(point, edge) {
+      return true
+    }
+    let crosses = (pi.y > point.y) != (pj.y > point.y)
+    if crosses {
+      let x_at_y = (pj.x - pi.x) * (point.y - pi.y) / (pj.y - pi.y) + pi.x
+      if point.x < x_at_y {
+        inside = !inside
+      }
+    }
+    j = i
+  }
+  inside
+}
