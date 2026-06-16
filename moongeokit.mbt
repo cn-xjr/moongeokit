@@ -29,6 +29,25 @@ pub(all) struct Polyline {
 } derive(Debug)
 
 ///|
+pub(all) struct SpatialItem {
+  id : Int
+  bounds : Bounds
+} derive(Debug)
+
+///|
+pub(all) struct SpatialIndex {
+  items : Array[SpatialItem]
+} derive(Debug)
+
+///|
+pub(all) struct GeometrySummary {
+  points : Int
+  segments : Int
+  polygons : Int
+  bounds : Bounds
+} derive(Debug)
+
+///|
 pub fn Point::new(x : Double, y : Double) -> Point {
   { x, y }
 }
@@ -225,8 +244,28 @@ pub fn Bounds::intersects(self : Bounds, other : Bounds) -> Bool {
 }
 
 ///|
+pub fn Bounds::union(self : Bounds, other : Bounds) -> Bounds {
+  Bounds::new(
+    min_double(self.min_x, other.min_x),
+    min_double(self.min_y, other.min_y),
+    max_double(self.max_x, other.max_x),
+    max_double(self.max_y, other.max_y),
+  )
+}
+
+///|
+pub fn Segment::bounds(self : Segment) -> Bounds {
+  Bounds::new(self.start.x, self.start.y, self.end.x, self.end.y)
+}
+
+///|
 pub fn Polygon::vertex_count(self : Polygon) -> Int {
   self.points.length()
+}
+
+///|
+pub fn Polygon::bounds(self : Polygon) -> Bounds {
+  Bounds::from_points(self.points)
 }
 
 ///|
@@ -371,6 +410,40 @@ pub fn Polyline::length(self : Polyline) -> Double {
 }
 
 ///|
+pub fn Polyline::bounds(self : Polyline) -> Bounds {
+  Bounds::from_points(self.points)
+}
+
+///|
+pub fn Polyline::closest_point(self : Polyline, point : Point) -> Point {
+  if self.points.length() == 0 {
+    return Point::new(0.0, 0.0)
+  }
+  if self.points.length() == 1 {
+    return self.points[0]
+  }
+  let mut best = self.points[0]
+  let mut best_distance = point.distance_to(best)
+  for i = 1; i < self.points.length(); i = i + 1 {
+    let candidate = closest_point_on_segment(
+      point,
+      Segment::new(self.points[i - 1], self.points[i]),
+    )
+    let distance = point.distance_to(candidate)
+    if distance < best_distance {
+      best = candidate
+      best_distance = distance
+    }
+  }
+  best
+}
+
+///|
+pub fn Polyline::distance_to(self : Polyline, point : Point) -> Double {
+  point.distance_to(self.closest_point(point))
+}
+
+///|
 pub fn Polyline::simplify_by_distance(
   self : Polyline,
   min_distance : Double,
@@ -389,6 +462,81 @@ pub fn Polyline::simplify_by_distance(
     }
   }
   Polyline::new(simplified)
+}
+
+///|
+pub fn SpatialItem::new(id : Int, bounds : Bounds) -> SpatialItem {
+  { id, bounds }
+}
+
+///|
+pub fn SpatialIndex::new() -> SpatialIndex {
+  { items: [] }
+}
+
+///|
+pub fn SpatialIndex::from_items(items : Array[SpatialItem]) -> SpatialIndex {
+  { items, }
+}
+
+///|
+pub fn SpatialIndex::insert(self : SpatialIndex, item : SpatialItem) -> Unit {
+  self.items.push(item)
+}
+
+///|
+pub fn SpatialIndex::query_bounds(
+  self : SpatialIndex,
+  bounds : Bounds,
+) -> Array[SpatialItem] {
+  let result : Array[SpatialItem] = []
+  for item in self.items {
+    if item.bounds.intersects(bounds) {
+      result.push(item)
+    }
+  }
+  result
+}
+
+///|
+pub fn SpatialIndex::query_point(
+  self : SpatialIndex,
+  point : Point,
+) -> Array[SpatialItem] {
+  let result : Array[SpatialItem] = []
+  for item in self.items {
+    if item.bounds.contains(point) {
+      result.push(item)
+    }
+  }
+  result
+}
+
+///|
+pub fn SpatialIndex::bounds(self : SpatialIndex) -> Bounds {
+  if self.items.length() == 0 {
+    return Bounds::new(0.0, 0.0, 0.0, 0.0)
+  }
+  let mut bounds = self.items[0].bounds
+  for i = 1; i < self.items.length(); i = i + 1 {
+    bounds = bounds.union(self.items[i].bounds)
+  }
+  bounds
+}
+
+///|
+pub fn GeometrySummary::new(
+  points : Int,
+  segments : Int,
+  polygons : Int,
+  bounds : Bounds,
+) -> GeometrySummary {
+  { points, segments, polygons, bounds }
+}
+
+///|
+pub fn GeometrySummary::to_json(self : GeometrySummary) -> String {
+  "{\"points\":\{self.points},\"segments\":\{self.segments},\"polygons\":\{self.polygons},\"bounds\":\{self.bounds.to_json()}}"
 }
 
 ///|
@@ -413,4 +561,15 @@ pub fn Polygon::to_json(self : Polygon) -> String {
   }
   buf.write_string("]}")
   buf.to_string()
+}
+
+///|
+pub fn SpatialItem::to_json(self : SpatialItem) -> String {
+  "{\"id\":\{self.id},\"bounds\":\{self.bounds.to_json()}}"
+}
+
+///|
+pub fn SpatialIndex::to_json(self : SpatialIndex) -> String {
+  let bounds = self.bounds()
+  "{\"items\":\{self.items.length()},\"bounds\":\{bounds.to_json()}}"
 }

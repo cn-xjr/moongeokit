@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1 - 2026-06-16
+
+- 补充与 `moon_rapier`、`geometry3d` 等已有项目的关系说明
+- 添加 Bounds union、Segment bounds、Polygon bounds、Polyline bounds
+- 添加 Polyline 最近点和点到折线距离能力
+- 添加 SpatialItem、SpatialIndex，支持 AABB 点查询和范围查询
+- 添加 GeometrySummary 汇总对象和 JSON 输出
+- 扩展 CLI 演示与回归测试，突出 2D 计算几何和空间查询定位
+
 ## 0.1.0 - 2026-06-11
 
 - 初始化 MoonGeoKit 项目结构

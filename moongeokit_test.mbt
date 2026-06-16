@@ -66,6 +66,9 @@ test "bounds containment and intersection" {
   assert_false(bounds.contains(@moongeokit.Point::new(5.0, 2.0)))
   assert_true(bounds.intersects(@moongeokit.Bounds::new(3.0, 3.0, 5.0, 5.0)))
   assert_false(bounds.intersects(@moongeokit.Bounds::new(5.0, 5.0, 6.0, 6.0)))
+  let union = bounds.union(@moongeokit.Bounds::new(-1.0, 2.0, 2.0, 8.0))
+  assert_eq(union.min_x, -1.0)
+  assert_eq(union.max_y, 8.0)
 }
 
 ///|
@@ -128,6 +131,20 @@ test "polyline length sums consecutive distances" {
     @moongeokit.Point::new(6.0, 8.0),
   ])
   assert_eq(line.length(), 10.0)
+  assert_eq(line.bounds().max_x, 6.0)
+}
+
+///|
+test "polyline closest point and distance use all segments" {
+  let line = @moongeokit.Polyline::new([
+    @moongeokit.Point::new(0.0, 0.0),
+    @moongeokit.Point::new(4.0, 0.0),
+    @moongeokit.Point::new(4.0, 4.0),
+  ])
+  let closest = line.closest_point(@moongeokit.Point::new(3.0, 2.0))
+  assert_eq(closest.x, 4.0)
+  assert_eq(closest.y, 2.0)
+  assert_eq(line.distance_to(@moongeokit.Point::new(3.0, 2.0)), 1.0)
 }
 
 ///|
@@ -143,6 +160,38 @@ test "polyline simplify keeps endpoints and distant points" {
   assert_eq(simplified.points.length(), 3)
   assert_eq(simplified.points[1].x, 2.0)
   assert_eq(simplified.points[2].x, 4.0)
+}
+
+///|
+test "spatial index supports point and bounds queries" {
+  let index = @moongeokit.SpatialIndex::new()
+  index.insert(
+    @moongeokit.SpatialItem::new(1, @moongeokit.Bounds::new(0.0, 0.0, 2.0, 2.0)),
+  )
+  index.insert(
+    @moongeokit.SpatialItem::new(2, @moongeokit.Bounds::new(3.0, 3.0, 5.0, 5.0)),
+  )
+  let point_hits = index.query_point(@moongeokit.Point::new(1.0, 1.0))
+  let range_hits = index.query_bounds(
+    @moongeokit.Bounds::new(1.5, 1.5, 3.5, 3.5),
+  )
+  assert_eq(point_hits.length(), 1)
+  assert_eq(point_hits[0].id, 1)
+  assert_eq(range_hits.length(), 2)
+  assert_true(index.to_json().contains("\"items\":2"))
+  assert_true(point_hits[0].to_json().contains("\"id\":1"))
+}
+
+///|
+test "geometry summary exports aggregate metadata" {
+  let summary = @moongeokit.GeometrySummary::new(
+    5,
+    2,
+    1,
+    @moongeokit.Bounds::new(0.0, 0.0, 4.0, 4.0),
+  )
+  assert_true(summary.to_json().contains("\"points\":5"))
+  assert_true(summary.to_json().contains("\"polygons\":1"))
 }
 
 ///|
