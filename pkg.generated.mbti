@@ -1,0 +1,138 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "cn-xjr/moongeokit"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn closest_point_on_segment(Point, Segment) -> Point
+
+pub fn convex_hull(Array[Point]) -> Polygon
+
+pub fn distance_to_segment(Point, Segment) -> Double
+
+pub fn orientation(Point, Point, Point) -> Double
+
+pub fn orientation_sign(Point, Point, Point, Double) -> Int
+
+pub fn point_on_segment(Point, Segment) -> Bool
+
+pub fn point_on_segment_eps(Point, Segment, Double) -> Bool
+
+pub fn segments_intersect(Segment, Segment) -> Bool
+
+pub fn segments_intersect_eps(Segment, Segment, Double) -> Bool
+
+// Errors
+
+// Types and methods
+pub(all) struct Bounds {
+  min_x : Double
+  min_y : Double
+  max_x : Double
+  max_y : Double
+} derive(@debug.Debug)
+pub fn Bounds::contains(Self, Point) -> Bool
+pub fn Bounds::from_points(Array[Point]) -> Self
+pub fn Bounds::height(Self) -> Double
+pub fn Bounds::intersects(Self, Self) -> Bool
+pub fn Bounds::new(Double, Double, Double, Double) -> Self
+pub fn Bounds::to_json(Self) -> String
+pub fn Bounds::union(Self, Self) -> Self
+pub fn Bounds::width(Self) -> Double
+
+pub(all) struct GeometrySummary {
+  points : Int
+  segments : Int
+  polygons : Int
+  bounds : Bounds
+} derive(@debug.Debug)
+pub fn GeometrySummary::new(Int, Int, Int, Bounds) -> Self
+pub fn GeometrySummary::to_json(Self) -> String
+
+pub(all) struct GridSpatialIndex {
+  world : Bounds
+  columns : Int
+  rows : Int
+  items : Array[SpatialItem]
+  buckets : Array[Array[Int]]
+} derive(@debug.Debug)
+pub fn GridSpatialIndex::insert(Self, SpatialItem) -> Bool
+pub fn GridSpatialIndex::length(Self) -> Int
+pub fn GridSpatialIndex::new(Bounds, Int, Int) -> Self
+pub fn GridSpatialIndex::query_bounds(Self, Bounds) -> SpatialQueryResult
+pub fn GridSpatialIndex::query_point(Self, Point) -> SpatialQueryResult
+
+pub(all) struct Point {
+  x : Double
+  y : Double
+} derive(@debug.Debug)
+pub fn Point::add(Self, Self) -> Self
+pub fn Point::cross(Self, Self) -> Double
+pub fn Point::distance_to(Self, Self) -> Double
+pub fn Point::dot(Self, Self) -> Double
+pub fn Point::length(Self) -> Double
+pub fn Point::new(Double, Double) -> Self
+pub fn Point::scale(Self, Double) -> Self
+pub fn Point::sub(Self, Self) -> Self
+pub fn Point::to_json(Self) -> String
+
+pub(all) struct Polygon {
+  points : Array[Point]
+} derive(@debug.Debug)
+pub fn Polygon::area(Self) -> Double
+pub fn Polygon::bounds(Self) -> Bounds
+pub fn Polygon::centroid_average(Self) -> Point
+pub fn Polygon::contains_point(Self, Point) -> Bool
+pub fn Polygon::new(Array[Point]) -> Self
+pub fn Polygon::perimeter(Self) -> Double
+pub fn Polygon::signed_area(Self) -> Double
+pub fn Polygon::to_json(Self) -> String
+pub fn Polygon::vertex_count(Self) -> Int
+
+pub(all) struct Polyline {
+  points : Array[Point]
+} derive(@debug.Debug)
+pub fn Polyline::bounds(Self) -> Bounds
+pub fn Polyline::closest_point(Self, Point) -> Point
+pub fn Polyline::distance_to(Self, Point) -> Double
+pub fn Polyline::length(Self) -> Double
+pub fn Polyline::new(Array[Point]) -> Self
+pub fn Polyline::simplify_by_distance(Self, Double) -> Self
+
+pub(all) struct Segment {
+  start : Point
+  end : Point
+} derive(@debug.Debug)
+pub fn Segment::bounds(Self) -> Bounds
+pub fn Segment::new(Point, Point) -> Self
+
+pub(all) struct SpatialIndex {
+  items : Array[SpatialItem]
+} derive(@debug.Debug)
+pub fn SpatialIndex::bounds(Self) -> Bounds
+pub fn SpatialIndex::from_items(Array[SpatialItem]) -> Self
+pub fn SpatialIndex::insert(Self, SpatialItem) -> Unit
+pub fn SpatialIndex::new() -> Self
+pub fn SpatialIndex::query_bounds(Self, Bounds) -> Array[SpatialItem]
+pub fn SpatialIndex::query_point(Self, Point) -> Array[SpatialItem]
+pub fn SpatialIndex::to_json(Self) -> String
+
+pub(all) struct SpatialItem {
+  id : Int
+  bounds : Bounds
+} derive(@debug.Debug)
+pub fn SpatialItem::new(Int, Bounds) -> Self
+pub fn SpatialItem::to_json(Self) -> String
+
+pub(all) struct SpatialQueryResult {
+  items : Array[SpatialItem]
+  candidates_scanned : Int
+  buckets_visited : Int
+} derive(@debug.Debug)
+
+// Type aliases
+
+// Traits
+

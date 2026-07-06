@@ -11,7 +11,7 @@
 
 name = "cn-xjr/moongeokit"
 
-version = "0.1.0"
+version = "0.2.0"
 
 readme = "README.mbt.md"
 
@@ -19,6 +19,6 @@ repository = "https://github.com/cn-xjr/moongeokit"
 
 license = "Apache-2.0"
 
-keywords = [ "geometry", "point", "polygon", "convex-hull" ]
+keywords = [ "geometry", "spatial-index", "uniform-grid", "polygon", "gis" ]
 
-description = "A MoonBit 2D computational geometry toolkit."
+description = "Robust 2D geometry and observable spatial indexing for MoonBit."
