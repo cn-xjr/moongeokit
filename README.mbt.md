@@ -16,18 +16,15 @@ MoonGeoKit 是面向 MoonBit 的二维计算几何与可观测空间查询基础
 
 ## 可观测空间索引
 
-```mbt
+```mbt nocheck
+///|
 test {
   let index = GridSpatialIndex::new(
     Bounds::new(0.0, 0.0, 1000.0, 1000.0),
     100,
     100,
   )
-  ignore(
-    index.insert(
-      SpatialItem::new(1, Bounds::new(10.0, 10.0, 14.0, 14.0)),
-    ),
-  )
+  ignore(index.insert(SpatialItem::new(1, Bounds::new(10.0, 10.0, 14.0, 14.0))))
 
   let result = index.query_point(Point::new(12.0, 12.0))
   assert_eq(result.items.length(), 1)
@@ -40,7 +37,8 @@ test {
 
 ## 容差几何谓词
 
-```mbt
+```mbt nocheck
+///|
 test {
   let edge = Segment::new(Point::new(0.0, 0.0), Point::new(10.0, 0.0))
   let measured = Point::new(5.0, 0.00000001)

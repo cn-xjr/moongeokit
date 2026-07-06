@@ -1,6 +1,10 @@
 ///|
 fn abs_double(value : Double) -> Double {
-  if value < 0.0 { -value } else { value }
+  if value < 0.0 {
+    -value
+  } else {
+    value
+  }
 }
 
 ///|

@@ -40,17 +40,13 @@ pub fn GridSpatialIndex::length(self : GridSpatialIndex) -> Int {
 }
 
 ///|
-fn GridSpatialIndex::column_for(
-  self : GridSpatialIndex,
-  x : Double,
-) -> Int {
+fn GridSpatialIndex::column_for(self : GridSpatialIndex, x : Double) -> Int {
   if self.world.width() <= 0.0 {
     return 0
   }
-  let raw = (
-    (x - self.world.min_x) / self.world.width() *
-    self.columns.to_double()
-  ).to_int()
+  let raw = ((x - self.world.min_x) /
+  self.world.width() *
+  self.columns.to_double()).to_int()
   clamp_int(raw, 0, self.columns - 1)
 }
 
@@ -59,10 +55,9 @@ fn GridSpatialIndex::row_for(self : GridSpatialIndex, y : Double) -> Int {
   if self.world.height() <= 0.0 {
     return 0
   }
-  let raw = (
-    (y - self.world.min_y) / self.world.height() *
-    self.rows.to_double()
-  ).to_int()
+  let raw = ((y - self.world.min_y) /
+  self.world.height() *
+  self.rows.to_double()).to_int()
   clamp_int(raw, 0, self.rows - 1)
 }
 
@@ -106,9 +101,10 @@ pub fn GridSpatialIndex::query_point(
   if !self.world.contains(point) {
     return { items: [], candidates_scanned: 0, buckets_visited: 0 }
   }
-  let bucket = self.buckets[
-    self.bucket_index(self.column_for(point.x), self.row_for(point.y))
-  ]
+  let bucket = self.buckets[self.bucket_index(
+      self.column_for(point.x),
+      self.row_for(point.y),
+    )]
   let result : Array[SpatialItem] = []
   for i = 0; i < bucket.length(); i = i + 1 {
     let item = self.items[bucket[i]]
@@ -152,11 +148,7 @@ pub fn GridSpatialIndex::query_bounds(
       }
     }
   }
-  {
-    items: result,
-    candidates_scanned: candidates,
-    buckets_visited: visited,
-  }
+  { items: result, candidates_scanned: candidates, buckets_visited: visited }
 }
 
 ///|

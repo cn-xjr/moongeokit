@@ -22,9 +22,7 @@ fn main {
     }
   }
   let point = index.query_point(@geo.Point::new(502.5, 502.5))
-  let range = index.query_bounds(
-    @geo.Bounds::new(490.0, 490.0, 520.0, 520.0),
-  )
+  let range = index.query_bounds(@geo.Bounds::new(490.0, 490.0, 520.0, 520.0))
   println("scenario,items,hits,candidates,buckets")
   println("linear-point-baseline,\{total},1,\{total},1")
   println(

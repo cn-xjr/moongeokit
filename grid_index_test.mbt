@@ -42,9 +42,7 @@ test "grid index range query deduplicates spanning items" {
       ),
     ),
   )
-  let result = index.query_bounds(
-    @moongeokit.Bounds::new(5.0, 5.0, 15.0, 15.0),
-  )
+  let result = index.query_bounds(@moongeokit.Bounds::new(5.0, 5.0, 15.0, 15.0))
   assert_eq(result.items.length(), 1)
   assert_eq(result.items[0].id, 1)
   assert_eq(result.candidates_scanned, 1)
@@ -81,12 +79,7 @@ test "tolerant predicates handle floating point measurement noise" {
   assert_false(@moongeokit.point_on_segment_eps(measured, segment, 0.000000001))
   assert_true(@moongeokit.point_on_segment_eps(measured, segment, 0.000001))
   assert_eq(
-    @moongeokit.orientation_sign(
-      segment.start,
-      segment.end,
-      measured,
-      0.000001,
-    ),
+    @moongeokit.orientation_sign(segment.start, segment.end, measured, 0.000001),
     0,
   )
 }
