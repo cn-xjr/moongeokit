@@ -94,6 +94,76 @@ pub fn GridSpatialIndex::insert(
 }
 
 ///|
+/// Removes the first item with `id` and rebuilds bucket membership.
+///
+/// Rebuilding is deterministic and keeps deletion semantics simple for map
+/// editors where the index is updated less often than it is queried.
+pub fn GridSpatialIndex::remove(self : GridSpatialIndex, id : Int) -> Bool {
+  let index = self.item_index(id)
+  if index < 0 {
+    return false
+  }
+  let last = self.items.unsafe_pop()
+  if index < self.items.length() {
+    self.items[index] = last
+  }
+  self.rebuild_buckets()
+  true
+}
+
+///|
+/// Replaces an item's bounds and refreshes its covered grid buckets.
+pub fn GridSpatialIndex::update(
+  self : GridSpatialIndex,
+  id : Int,
+  bounds : Bounds,
+) -> Bool {
+  let index = self.item_index(id)
+  if index < 0 || !self.world.intersects(bounds) {
+    return false
+  }
+  self.items[index] = SpatialItem::new(id, bounds)
+  self.rebuild_buckets()
+  true
+}
+
+///|
+pub fn GridSpatialIndex::contains_id(self : GridSpatialIndex, id : Int) -> Bool {
+  self.item_index(id) >= 0
+}
+
+///|
+fn GridSpatialIndex::item_index(self : GridSpatialIndex, id : Int) -> Int {
+  for i = 0; i < self.items.length(); i = i + 1 {
+    if self.items[i].id == id {
+      return i
+    }
+  }
+  -1
+}
+
+///|
+fn GridSpatialIndex::rebuild_buckets(self : GridSpatialIndex) -> Unit {
+  for i = 0; i < self.buckets.length(); i = i + 1 {
+    self.buckets[i] = []
+  }
+  for item_index = 0
+      item_index < self.items.length()
+      item_index = item_index + 1 {
+    let bounds = self.items[item_index].bounds
+    let min_column = self.column_for(bounds.min_x)
+    let max_column = self.column_for(bounds.max_x)
+    let min_row = self.row_for(bounds.min_y)
+    let max_row = self.row_for(bounds.max_y)
+    for row = min_row; row <= max_row; row = row + 1 {
+      for column = min_column; column <= max_column; column = column + 1 {
+        self.buckets[self.bucket_index(column, row)].push(item_index)
+      }
+    }
+  }
+}
+
+///|
 pub fn GridSpatialIndex::query_point(
   self : GridSpatialIndex,
   point : Point,

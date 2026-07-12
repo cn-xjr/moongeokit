@@ -58,11 +58,14 @@ pub(all) struct GridSpatialIndex {
   items : Array[SpatialItem]
   buckets : Array[Array[Int]]
 } derive(@debug.Debug)
+pub fn GridSpatialIndex::contains_id(Self, Int) -> Bool
 pub fn GridSpatialIndex::insert(Self, SpatialItem) -> Bool
 pub fn GridSpatialIndex::length(Self) -> Int
 pub fn GridSpatialIndex::new(Bounds, Int, Int) -> Self
 pub fn GridSpatialIndex::query_bounds(Self, Bounds) -> SpatialQueryResult
 pub fn GridSpatialIndex::query_point(Self, Point) -> SpatialQueryResult
+pub fn GridSpatialIndex::remove(Self, Int) -> Bool
+pub fn GridSpatialIndex::update(Self, Int, Bounds) -> Bool
 
 pub(all) struct Point {
   x : Double

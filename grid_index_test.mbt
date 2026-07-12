@@ -83,3 +83,36 @@ test "tolerant predicates handle floating point measurement noise" {
     0,
   )
 }
+
+///|
+test "grid index updates and removes editor objects by id" {
+  let index = @moongeokit.GridSpatialIndex::new(
+    @moongeokit.Bounds::new(0.0, 0.0, 100.0, 100.0),
+    10,
+    10,
+  )
+  assert_true(
+    index.insert(
+      @moongeokit.SpatialItem::new(
+        7,
+        @moongeokit.Bounds::new(2.0, 2.0, 8.0, 8.0),
+      ),
+    ),
+  )
+  assert_true(index.update(7, @moongeokit.Bounds::new(72.0, 72.0, 78.0, 78.0)))
+  assert_eq(
+    index.query_point(@moongeokit.Point::new(4.0, 4.0)).items.length(),
+    0,
+  )
+  assert_eq(
+    index.query_point(@moongeokit.Point::new(75.0, 75.0)).items[0].id,
+    7,
+  )
+  assert_true(index.remove(7))
+  assert_false(index.contains_id(7))
+  assert_eq(
+    index.query_point(@moongeokit.Point::new(75.0, 75.0)).items.length(),
+    0,
+  )
+  assert_false(index.remove(7))
+}
