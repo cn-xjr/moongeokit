@@ -116,3 +116,84 @@ test "grid index updates and removes editor objects by id" {
   )
   assert_false(index.remove(7))
 }
+
+///|
+test "grid index batch mutation rebuilds once and retains query correctness" {
+  let index = @moongeokit.GridSpatialIndex::new(
+    @moongeokit.Bounds::new(0.0, 0.0, 100.0, 100.0),
+    10,
+    10,
+  )
+  assert_eq(
+    index.insert_many([
+      @moongeokit.SpatialItem::new(
+        1,
+        @moongeokit.Bounds::new(1.0, 1.0, 2.0, 2.0),
+      ),
+      @moongeokit.SpatialItem::new(
+        2,
+        @moongeokit.Bounds::new(20.0, 20.0, 21.0, 21.0),
+      ),
+      @moongeokit.SpatialItem::new(
+        3,
+        @moongeokit.Bounds::new(200.0, 2.0, 201.0, 3.0),
+      ),
+    ]),
+    2,
+  )
+  assert_eq(
+    index.update_many([
+      @moongeokit.SpatialItem::new(
+        1,
+        @moongeokit.Bounds::new(50.0, 50.0, 51.0, 51.0),
+      ),
+      @moongeokit.SpatialItem::new(
+        99,
+        @moongeokit.Bounds::new(5.0, 5.0, 6.0, 6.0),
+      ),
+    ]),
+    1,
+  )
+  assert_eq(
+    index.query_point(@moongeokit.Point::new(1.5, 1.5)).items.length(),
+    0,
+  )
+  assert_eq(
+    index.query_point(@moongeokit.Point::new(50.5, 50.5)).items[0].id,
+    1,
+  )
+  assert_eq(index.remove_many([1, 2, 999]), 2)
+  assert_eq(index.length(), 0)
+}
+
+///|
+test "grid index nearest query uses bounded exact distance" {
+  let index = @moongeokit.GridSpatialIndex::new(
+    @moongeokit.Bounds::new(0.0, 0.0, 100.0, 100.0),
+    10,
+    10,
+  )
+  ignore(
+    index.insert(
+      @moongeokit.SpatialItem::new(
+        1,
+        @moongeokit.Bounds::new(10.0, 10.0, 12.0, 12.0),
+      ),
+    ),
+  )
+  ignore(
+    index.insert(
+      @moongeokit.SpatialItem::new(
+        2,
+        @moongeokit.Bounds::new(20.0, 20.0, 22.0, 22.0),
+      ),
+    ),
+  )
+  match index.query_nearest(@moongeokit.Point::new(13.0, 11.0), 10.0) {
+    Some(item) => assert_eq(item.id, 1)
+    None => fail("expected nearby item")
+  }
+  assert_true(
+    index.query_nearest(@moongeokit.Point::new(13.0, 11.0), -1.0) is None,
+  )
+}

@@ -29,4 +29,5 @@ fn main {
   println("river_distance=\{river.distance_to(@geo.Point::new(4.0, 3.0))}")
   println("query_hits=\{index.query_point(@geo.Point::new(2.0, 1.0)).length()}")
   println("summary=\{summary.to_json()}")
+  println("geojson=\{hull.to_geojson()}")
 }

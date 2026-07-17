@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0 - 2026-07-17
+
+- Add area-weighted polygon centroids, point-to-bounds distance, and standard
+  GeoJSON geometry/feature export for WebAssembly and GIS consumers.
+- Add batch grid insertion, update, and deletion APIs that rebuild membership
+  once, plus bounded nearest-item lookup with exact AABB distances.
+- Expand the reproducible benchmark to deterministic 1k, 10k, and ~100k
+  workloads, and expose GeoJSON in the runnable CLI example.
+- Make CI contain explicit format, warning-free check, generated-interface,
+  and warning-free test gates compatible with MoonBit 0.10.4.
+
 ## 0.2.1
 
 - 修复公开文档乱码与 MoonBit 格式检查。

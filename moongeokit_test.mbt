@@ -237,3 +237,34 @@ test "geometry objects export stable json" {
   assert_true(bounds.to_json().contains("\"max_y\":4"))
   assert_true(polygon.to_json().contains("\"points\""))
 }
+
+///|
+test "area centroid and GeoJSON exports are standards-shaped" {
+  let polygon = @moongeokit.Polygon::new([
+    @moongeokit.Point::new(0.0, 0.0),
+    @moongeokit.Point::new(6.0, 0.0),
+    @moongeokit.Point::new(6.0, 3.0),
+    @moongeokit.Point::new(0.0, 3.0),
+  ])
+  let center = polygon.centroid()
+  assert_eq(center.x, 3.0)
+  assert_eq(center.y, 1.5)
+  assert_eq(
+    @moongeokit.Bounds::new(0.0, 0.0, 2.0, 2.0).distance_to_point(
+      @moongeokit.Point::new(5.0, 1.0),
+    ),
+    3.0,
+  )
+  assert_true(polygon.to_geojson().contains("\"type\":\"Polygon\""))
+  assert_true(polygon.to_geojson().contains("[0,0]"))
+  let line = @moongeokit.Polyline::new([
+    @moongeokit.Point::new(0.0, 0.0),
+    @moongeokit.Point::new(2.0, 1.0),
+  ])
+  assert_true(line.to_geojson().contains("LineString"))
+  assert_true(
+    @moongeokit.SpatialItem::new(7, polygon.bounds())
+    .to_geojson_feature()
+    .contains("\"Feature\""),
+  )
+}

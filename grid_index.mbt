@@ -15,7 +15,7 @@ pub(all) struct GridSpatialIndex {
   world : Bounds
   columns : Int
   rows : Int
-  items : Array[SpatialItem]
+  mut items : Array[SpatialItem]
   buckets : Array[Array[Int]]
 } derive(Debug)
 
@@ -94,6 +94,22 @@ pub fn GridSpatialIndex::insert(
 }
 
 ///|
+/// Inserts every in-world item and returns the number accepted. This is the
+/// preferred ingestion API for tiles, entity snapshots, and GeoJSON features.
+pub fn GridSpatialIndex::insert_many(
+  self : GridSpatialIndex,
+  items : Array[SpatialItem],
+) -> Int {
+  let mut inserted = 0
+  for item in items {
+    if self.insert(item) {
+      inserted = inserted + 1
+    }
+  }
+  inserted
+}
+
+///|
 /// Removes the first item with `id` and rebuilds bucket membership.
 ///
 /// Rebuilding is deterministic and keeps deletion semantics simple for map
@@ -125,6 +141,56 @@ pub fn GridSpatialIndex::update(
   self.items[index] = SpatialItem::new(id, bounds)
   self.rebuild_buckets()
   true
+}
+
+///|
+/// Applies a batch of id/bounds replacements and rebuilds bucket membership
+/// once. Invalid ids and bounds outside the configured world are skipped.
+pub fn GridSpatialIndex::update_many(
+  self : GridSpatialIndex,
+  items : Array[SpatialItem],
+) -> Int {
+  let mut changed = 0
+  for item in items {
+    let index = self.item_index(item.id)
+    if index >= 0 && self.world.intersects(item.bounds) {
+      self.items[index] = item
+      changed = changed + 1
+    }
+  }
+  if changed > 0 {
+    self.rebuild_buckets()
+  }
+  changed
+}
+
+///|
+/// Removes every item whose id occurs in `ids` and rebuilds once. The result
+/// is the number of records actually removed, not the number of requested ids.
+pub fn GridSpatialIndex::remove_many(
+  self : GridSpatialIndex,
+  ids : Array[Int],
+) -> Int {
+  let retained : Array[SpatialItem] = []
+  let mut removed = 0
+  for item in self.items {
+    let mut should_remove = false
+    for id in ids {
+      if item.id == id {
+        should_remove = true
+      }
+    }
+    if should_remove {
+      removed = removed + 1
+    } else {
+      retained.push(item)
+    }
+  }
+  if removed > 0 {
+    self.items = retained
+    self.rebuild_buckets()
+  }
+  removed
 }
 
 ///|
@@ -219,6 +285,40 @@ pub fn GridSpatialIndex::query_bounds(
     }
   }
   { items: result, candidates_scanned: candidates, buckets_visited: visited }
+}
+
+///|
+/// Finds the closest indexed bounds within `max_distance` of `point`.
+///
+/// It uses a bounded grid query before exact point-to-AABB distance tests, so
+/// map clients can keep a stable interaction radius without scanning the whole
+/// world. `None` means no candidate overlaps the search envelope.
+pub fn GridSpatialIndex::query_nearest(
+  self : GridSpatialIndex,
+  point : Point,
+  max_distance : Double,
+) -> SpatialItem? {
+  if max_distance < 0.0 {
+    return None
+  }
+  let candidates = self.query_bounds(
+    Bounds::new(
+      point.x - max_distance,
+      point.y - max_distance,
+      point.x + max_distance,
+      point.y + max_distance,
+    ),
+  )
+  let mut nearest : SpatialItem? = None
+  let mut distance = max_distance
+  for item in candidates.items {
+    let candidate_distance = item.bounds.distance_to_point(point)
+    if candidate_distance <= distance {
+      distance = candidate_distance
+      nearest = Some(item)
+    }
+  }
+  nearest
 }
 
 ///|

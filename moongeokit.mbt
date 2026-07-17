@@ -233,6 +233,15 @@ pub fn Bounds::union(self : Bounds, other : Bounds) -> Bounds {
 }
 
 ///|
+/// Returns the Euclidean distance from a point to this axis-aligned bounds.
+/// The result is zero when the point is inside or on the bounds.
+pub fn Bounds::distance_to_point(self : Bounds, point : Point) -> Double {
+  let x = clamp_double(point.x, self.min_x, self.max_x)
+  let y = clamp_double(point.y, self.min_y, self.max_y)
+  point.distance_to(Point::new(x, y))
+}
+
+///|
 pub fn Segment::bounds(self : Segment) -> Bounds {
   Bounds::new(self.start.x, self.start.y, self.end.x, self.end.y)
 }
@@ -300,6 +309,33 @@ pub fn Polygon::centroid_average(self : Polygon) -> Point {
     x / self.points.length().to_double(),
     y / self.points.length().to_double(),
   )
+}
+
+///|
+/// Computes the area-weighted centroid of a polygon ring.
+///
+/// Degenerate rings have no stable area centroid, so their vertex average is
+/// returned instead. This makes the function suitable for editor previews and
+/// GeoJSON data that may contain line-like polygons.
+pub fn Polygon::centroid(self : Polygon) -> Point {
+  if self.points.length() < 3 {
+    return self.centroid_average()
+  }
+  let mut twice_area = 0.0
+  let mut x = 0.0
+  let mut y = 0.0
+  for i = 0; i < self.points.length(); i = i + 1 {
+    let next = (i + 1) % self.points.length()
+    let cross = self.points[i].x * self.points[next].y -
+      self.points[next].x * self.points[i].y
+    twice_area = twice_area + cross
+    x = x + (self.points[i].x + self.points[next].x) * cross
+    y = y + (self.points[i].y + self.points[next].y) * cross
+  }
+  if twice_area == 0.0 {
+    return self.centroid_average()
+  }
+  Point::new(x / (3.0 * twice_area), y / (3.0 * twice_area))
 }
 
 ///|
@@ -545,6 +581,67 @@ pub fn Polygon::to_json(self : Polygon) -> String {
 ///|
 pub fn SpatialItem::to_json(self : SpatialItem) -> String {
   "{\"id\":\{self.id},\"bounds\":\{self.bounds.to_json()}}"
+}
+
+///|
+/// Encodes a point as a GeoJSON geometry object. Coordinates intentionally
+/// remain numeric so the output can be passed directly to a Web/Wasm client.
+pub fn Point::to_geojson(self : Point) -> String {
+  "{\"type\":\"Point\",\"coordinates\":[\{self.x},\{self.y}]}"
+}
+
+///|
+/// Encodes a polyline as a GeoJSON LineString geometry object.
+pub fn Polyline::to_geojson(self : Polyline) -> String {
+  let buf = StringBuilder()
+  buf.write_string("{\"type\":\"LineString\",\"coordinates\":[")
+  for i = 0; i < self.points.length(); i = i + 1 {
+    if i > 0 {
+      buf.write_char(',')
+    }
+    let point = self.points[i]
+    buf.write_string("[\{point.x},\{point.y}]")
+  }
+  buf.write_string("]}")
+  buf.to_string()
+}
+
+///|
+/// Encodes a polygon as a GeoJSON Polygon geometry object. GeoJSON requires
+/// a closed exterior ring; this function closes a non-empty ring on export.
+pub fn Polygon::to_geojson(self : Polygon) -> String {
+  let buf = StringBuilder()
+  buf.write_string("{\"type\":\"Polygon\",\"coordinates\":[[")
+  for i = 0; i < self.points.length(); i = i + 1 {
+    if i > 0 {
+      buf.write_char(',')
+    }
+    let point = self.points[i]
+    buf.write_string("[\{point.x},\{point.y}]")
+  }
+  if self.points.length() > 0 {
+    let first = self.points[0]
+    buf.write_string(",[\{first.x},\{first.y}]")
+  }
+  buf.write_string("]]}")
+  buf.to_string()
+}
+
+///|
+/// Encodes bounds as a GeoJSON Polygon geometry object.
+pub fn Bounds::to_geojson(self : Bounds) -> String {
+  Polygon::new([
+    Point::new(self.min_x, self.min_y),
+    Point::new(self.max_x, self.min_y),
+    Point::new(self.max_x, self.max_y),
+    Point::new(self.min_x, self.max_y),
+  ]).to_geojson()
+}
+
+///|
+/// Encodes an indexed bounds record as a GeoJSON Feature with a numeric id.
+pub fn SpatialItem::to_geojson_feature(self : SpatialItem) -> String {
+  "{\"type\":\"Feature\",\"id\":\{self.id},\"properties\":{},\"geometry\":\{self.bounds.to_geojson()}}"
 }
 
 ///|

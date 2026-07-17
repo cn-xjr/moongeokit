@@ -34,10 +34,12 @@ pub(all) struct Bounds {
   max_y : Double
 } derive(@debug.Debug)
 pub fn Bounds::contains(Self, Point) -> Bool
+pub fn Bounds::distance_to_point(Self, Point) -> Double
 pub fn Bounds::from_points(Array[Point]) -> Self
 pub fn Bounds::height(Self) -> Double
 pub fn Bounds::intersects(Self, Self) -> Bool
 pub fn Bounds::new(Double, Double, Double, Double) -> Self
+pub fn Bounds::to_geojson(Self) -> String
 pub fn Bounds::to_json(Self) -> String
 pub fn Bounds::union(Self, Self) -> Self
 pub fn Bounds::width(Self) -> Double
@@ -55,17 +57,21 @@ pub(all) struct GridSpatialIndex {
   world : Bounds
   columns : Int
   rows : Int
-  items : Array[SpatialItem]
+  mut items : Array[SpatialItem]
   buckets : Array[Array[Int]]
 } derive(@debug.Debug)
 pub fn GridSpatialIndex::contains_id(Self, Int) -> Bool
 pub fn GridSpatialIndex::insert(Self, SpatialItem) -> Bool
+pub fn GridSpatialIndex::insert_many(Self, Array[SpatialItem]) -> Int
 pub fn GridSpatialIndex::length(Self) -> Int
 pub fn GridSpatialIndex::new(Bounds, Int, Int) -> Self
 pub fn GridSpatialIndex::query_bounds(Self, Bounds) -> SpatialQueryResult
+pub fn GridSpatialIndex::query_nearest(Self, Point, Double) -> SpatialItem?
 pub fn GridSpatialIndex::query_point(Self, Point) -> SpatialQueryResult
 pub fn GridSpatialIndex::remove(Self, Int) -> Bool
+pub fn GridSpatialIndex::remove_many(Self, Array[Int]) -> Int
 pub fn GridSpatialIndex::update(Self, Int, Bounds) -> Bool
+pub fn GridSpatialIndex::update_many(Self, Array[SpatialItem]) -> Int
 
 pub(all) struct Point {
   x : Double
@@ -79,6 +85,7 @@ pub fn Point::length(Self) -> Double
 pub fn Point::new(Double, Double) -> Self
 pub fn Point::scale(Self, Double) -> Self
 pub fn Point::sub(Self, Self) -> Self
+pub fn Point::to_geojson(Self) -> String
 pub fn Point::to_json(Self) -> String
 
 pub(all) struct Polygon {
@@ -86,11 +93,13 @@ pub(all) struct Polygon {
 } derive(@debug.Debug)
 pub fn Polygon::area(Self) -> Double
 pub fn Polygon::bounds(Self) -> Bounds
+pub fn Polygon::centroid(Self) -> Point
 pub fn Polygon::centroid_average(Self) -> Point
 pub fn Polygon::contains_point(Self, Point) -> Bool
 pub fn Polygon::new(Array[Point]) -> Self
 pub fn Polygon::perimeter(Self) -> Double
 pub fn Polygon::signed_area(Self) -> Double
+pub fn Polygon::to_geojson(Self) -> String
 pub fn Polygon::to_json(Self) -> String
 pub fn Polygon::vertex_count(Self) -> Int
 
@@ -103,6 +112,7 @@ pub fn Polyline::distance_to(Self, Point) -> Double
 pub fn Polyline::length(Self) -> Double
 pub fn Polyline::new(Array[Point]) -> Self
 pub fn Polyline::simplify_by_distance(Self, Double) -> Self
+pub fn Polyline::to_geojson(Self) -> String
 
 pub(all) struct Segment {
   start : Point
@@ -127,6 +137,7 @@ pub(all) struct SpatialItem {
   bounds : Bounds
 } derive(@debug.Debug)
 pub fn SpatialItem::new(Int, Bounds) -> Self
+pub fn SpatialItem::to_geojson_feature(Self) -> String
 pub fn SpatialItem::to_json(Self) -> String
 
 pub(all) struct SpatialQueryResult {

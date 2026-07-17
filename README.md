@@ -1,28 +1,75 @@
 # MoonGeoKit
 
-MoonGeoKit 是面向 MoonBit 的二维计算几何与可观测空间查询基础库。
+MoonGeoKit is a MoonBit-native 2D geometry and observable uniform-grid spatial
+index for map editors, GIS-style overlays, simulations, and WebAssembly
+clients. It is a reusable library, not a rendering demo: callers own the map
+data and use the library for deterministic geometry, incremental index changes,
+and inspectable query costs.
 
-项目不仅提供点、线段、包围盒、多边形、凸包等基础算法，还实现了固定世界范围的均匀网格索引。查询结果会同时返回命中对象、实际扫描候选数和访问网格数，使正确性与性能收益都可以直接验证。
+## Production-facing capabilities
 
-## 主要能力
+- Points, segments, bounds, polylines, polygons, convex hulls, containment,
+  intersections, nearest points, distances, and tolerant predicates.
+- Area-weighted polygon centroid with a defined fallback for degenerate rings.
+- Fixed-world uniform-grid index with point/range queries, cross-cell
+  deduplication, candidate/bucket diagnostics, and out-of-world protection.
+- Editor/simulation mutations: single and batched insert, update, and delete;
+  batch mutations rebuild bucket membership once.
+- Bounded nearest-item lookup using grid candidate reduction plus exact
+  point-to-AABB distance.
+- Standard GeoJSON Point, LineString, Polygon, bounds, and Feature export for
+  browser/Wasm hand-off without a runtime dependency.
 
-- 二维点、线段、包围盒与多边形关系计算。
-- 凸包、点到线段距离、折线长度等常用算法。
-- 带调用方容差的方向、点在线段上和线段相交谓词。
-- 支持点查询与范围查询的均匀网格空间索引。
-- 跨网格对象去重、越界保护和可观测查询统计。
-- Native、JavaScript、Wasm、Wasm-GC 四后端 CI。
+## Install
 
-## 验收命令
+```bash
+moon add cn-xjr/moongeokit
+```
+
+## Minimal example
+
+```moonbit
+let index = @geo.GridSpatialIndex::new(@geo.Bounds::new(0.0, 0.0, 100.0, 100.0), 10, 10)
+ignore(index.insert(@geo.SpatialItem::new(7, @geo.Bounds::new(10.0, 10.0, 15.0, 15.0))))
+match index.query_nearest(@geo.Point::new(18.0, 12.0), 20.0) {
+  Some(item) => println(item.to_geojson_feature())
+  None => println("no nearby feature")
+}
+```
+
+Run the repository demo (including GeoJSON output) with:
+
+```bash
+moon run cmd/main --target js
+```
+
+## Reproducible verification
+
+MoonBit 0.10.4 does not accept `--deny-warn` for `moon fmt` or `moon info`.
+The commands below are the supported strict equivalents and are exactly the
+quality gates used by CI:
 
 ```bash
 moon fmt --check
-moon check --target all
-moon test --target wasm
-moon test --target wasm-gc
-moon run cmd/main
-moon run cmd/bench
+moon check --deny-warn --target all
+moon info && git diff --exit-code -- '*.mbti'
+moon test --deny-warn --target all
+moon run cmd/main --target js
+moon run cmd/bench --target js
 ```
 
-详细 API 示例见 [README.mbt.md](README.mbt.md)，社区差异见
-[docs/RELATED_WORK.md](docs/RELATED_WORK.md)。
+`cmd/bench` prints deterministic candidate/bucket counts for 1k, 10k, and
+roughly 100k indexed records. It deliberately does not publish wall-clock
+claims because elapsed time depends on the native/JS/Wasm host.
+
+## Scope and compatibility
+
+The index is a mutable, fixed-world AABB index. It is appropriate for dynamic
+editor entities and bounded simulation worlds; it is not a replacement for an
+R-tree, polygon topology engine, coordinate-reference transformation library,
+or a GeoJSON parser. GeoJSON output is provided for integration; input parsing
+and application-specific feature properties remain in the host application.
+
+See [README.mbt.md](README.mbt.md) for API notes, [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md)
+for verification evidence, and [docs/RELATED_WORK.md](docs/RELATED_WORK.md)
+for scope and prior-art notes.

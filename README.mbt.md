@@ -1,63 +1,55 @@
 # MoonGeoKit
 
-MoonGeoKit 是面向 MoonBit 的二维计算几何与可观测空间查询基础库，适用于地图编辑、
-图形标注、游戏关卡、可视化拾取和碰撞预筛选。项目强调跨后端、确定性以及真实可量化
-的空间索引性能。
+MoonGeoKit provides deterministic two-dimensional geometry and a mutable
+uniform-grid spatial index for MoonBit. It runs with the same public API on
+native, JavaScript, Wasm, and Wasm-GC targets.
 
-## 核心能力
+## Geometry
 
-- `Point`、`Segment`、`Bounds`、`Polygon`、`Polyline`
-- 向量、距离、面积、周长、凸包和点包含
-- 带 epsilon 的稳健方向、点在线段上和线段相交谓词
-- 线性 `SpatialIndex`，适合小数据和基准对照
-- 均匀网格 `GridSpatialIndex`，适合已知世界范围的高频查询
-- 查询诊断：命中对象、扫描候选数、访问网格数
-- JSON 导出和确定性命令行基准
+- `Point`, `Segment`, `Bounds`, `Polyline`, and `Polygon` primitives.
+- Vector arithmetic, projections, distance, intersections, convex hulls,
+  containment, area/perimeter, and area-weighted polygon centroids.
+- Tolerant geometry predicates (`*_eps`) for measured coordinates.
+- GeoJSON export for Point, LineString, Polygon, bounds, and indexed features.
 
-## 可观测空间索引
+## Spatial indexing
+
+`SpatialIndex` is a simple linear baseline. `GridSpatialIndex` is intended for
+bounded map/editor worlds: it stores AABBs in every intersected grid cell,
+deduplicates range candidates, and reports both candidates scanned and buckets
+visited. It supports incremental single operations as well as batched insert,
+update, and delete operations. A batch rebuilds the bucket table once.
 
 ```mbt nocheck
 ///|
 test {
-  let index = GridSpatialIndex::new(
-    Bounds::new(0.0, 0.0, 1000.0, 1000.0),
-    100,
-    100,
+  let index = GridSpatialIndex::new(Bounds::new(0.0, 0.0, 100.0, 100.0), 10, 10)
+  ignore(
+    index.insert_many([
+      SpatialItem::new(1, Bounds::new(10.0, 10.0, 14.0, 14.0)),
+      SpatialItem::new(2, Bounds::new(40.0, 40.0, 42.0, 42.0)),
+    ]),
   )
-  ignore(index.insert(SpatialItem::new(1, Bounds::new(10.0, 10.0, 14.0, 14.0))))
-
-  let result = index.query_point(Point::new(12.0, 12.0))
-  assert_eq(result.items.length(), 1)
-  assert_eq(result.buckets_visited, 1)
+  match index.query_nearest(Point::new(16.0, 12.0), 10.0) {
+    Some(item) => assert_eq(item.id, 1)
+    None => fail("expected an item")
+  }
 }
 ```
 
-`candidates_scanned` 让应用和评审能够观察索引是否真正减少候选检查。跨多个网格的对象
-会被查询去重，再执行精确 AABB 判断。
-
-## 容差几何谓词
-
-```mbt nocheck
-///|
-test {
-  let edge = Segment::new(Point::new(0.0, 0.0), Point::new(10.0, 0.0))
-  let measured = Point::new(5.0, 0.00000001)
-
-  assert_false(point_on_segment_eps(measured, edge, 0.000000001))
-  assert_true(point_on_segment_eps(measured, edge, 0.000001))
-}
-```
-
-旧的 `point_on_segment` 和 `segments_intersect` API 保持兼容，并使用默认容差。
-
-## 运行与验收
+## Verification
 
 ```bash
-moon check --target all
-moon test --target wasm
-moon run cmd/main
-moon run cmd/bench
+moon fmt --check
+moon check --deny-warn --target all
+moon info && git diff --exit-code -- '*.mbti'
+moon test --deny-warn --target all
+moon run cmd/main --target js
+moon run cmd/bench --target js
 ```
 
-详见 [验收证据](docs/ACCEPTANCE.md)、
-[相关工作](docs/RELATED_WORK.md) 和 [路线图](ROADMAP.md)。
+MoonBit 0.10.4 does not support `--deny-warn` on `moon fmt` or `moon info`;
+the first and third commands are the supported strict equivalents. The CI file
+runs these exact commands. The benchmark reports deterministic 1k, 10k, and
+~100k candidate/bucket evidence instead of machine-specific elapsed-time
+claims.
